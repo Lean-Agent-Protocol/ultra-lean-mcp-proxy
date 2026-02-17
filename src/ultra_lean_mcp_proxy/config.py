@@ -87,7 +87,7 @@ class ProxyConfig:
     delta_snapshot_interval: int = 5
 
     lazy_loading_enabled: bool = True
-    lazy_mode: str = "catalog"
+    lazy_mode: str = "minimal"
     lazy_top_k: int = 8
     lazy_semantic: bool = False
     lazy_min_tools: int = 10

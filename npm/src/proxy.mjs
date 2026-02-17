@@ -220,26 +220,55 @@ function applyDefinitionCompression(tools) {
   return out;
 }
 
+function stripSchemaMetadata(schema, depth = 0) {
+  if (typeof schema !== 'object' || schema === null) return schema;
+  const out = {};
+  if (schema.type !== undefined) out.type = schema.type;
+  if (Array.isArray(schema.required) && schema.required.length > 0) out.required = [...schema.required];
+  if (Array.isArray(schema.enum)) out.enum = [...schema.enum];
+  if (typeof schema.format === 'string') out.format = schema.format;
+  if (typeof schema.pattern === 'string') out.pattern = schema.pattern;
+  if (schema.const !== undefined) out.const = schema.const;
+  if (typeof schema.$ref === 'string') out.$ref = schema.$ref;
+  if (typeof schema.minimum === 'number') out.minimum = schema.minimum;
+  if (typeof schema.maximum === 'number') out.maximum = schema.maximum;
+  if (typeof schema.minLength === 'number') out.minLength = schema.minLength;
+  if (typeof schema.maxLength === 'number') out.maxLength = schema.maxLength;
+  if (typeof schema.minItems === 'number') out.minItems = schema.minItems;
+  if (typeof schema.maxItems === 'number') out.maxItems = schema.maxItems;
+  if (typeof schema.description === 'string' && depth <= 1) {
+    out.description = compressDescription(schema.description);
+  }
+  if (schema.properties && typeof schema.properties === 'object' && !Array.isArray(schema.properties)) {
+    out.properties = {};
+    for (const [key, value] of Object.entries(schema.properties)) {
+      out.properties[key] = stripSchemaMetadata(value, depth + 1);
+    }
+  }
+  if (Array.isArray(schema.items)) {
+    out.items = schema.items.map(s => stripSchemaMetadata(s, depth + 1));
+  } else if (schema.items && typeof schema.items === 'object') {
+    out.items = stripSchemaMetadata(schema.items, depth + 1);
+  }
+  for (const key of ['anyOf', 'oneOf', 'allOf']) {
+    if (Array.isArray(schema[key])) {
+      out[key] = schema[key].map(s => stripSchemaMetadata(s, depth + 1));
+    }
+  }
+  if (schema.not && typeof schema.not === 'object' && !Array.isArray(schema.not)) {
+    out.not = stripSchemaMetadata(schema.not, depth + 1);
+  }
+  return out;
+}
+
 function minimalTool(tool) {
   const name = tool?.name || '';
   const description = tool?.description || '';
   const schema = tool?.inputSchema || tool?.input_schema || {};
-  const properties = schema && typeof schema === 'object' && !Array.isArray(schema)
-    ? schema.properties || {}
-    : {};
-  const compactProps = {};
-  if (properties && typeof properties === 'object' && !Array.isArray(properties)) {
-    for (const [key, value] of Object.entries(properties)) {
-      const ptype = value && typeof value === 'object' && typeof value.type === 'string'
-        ? value.type
-        : 'string';
-      compactProps[String(key)] = { type: ptype };
-    }
-  }
   return {
     name,
-    description,
-    inputSchema: { type: 'object', properties: compactProps },
+    description: compressDescription(description) || description,
+    inputSchema: stripSchemaMetadata(schema, 0),
   };
 }
 
@@ -828,7 +857,17 @@ export function runProxy(upstreamCommand, options = {}) {
           const [toolName, argumentsValue] = extractToolCall(msg);
 
           if (cfg.lazyLoadingEnabled && toolName === SEARCH_TOOL_NAME) {
-            const searchResult = buildSearchResult(state, cfg, argumentsValue);
+            let searchResult = buildSearchResult(state, cfg, argumentsValue);
+            searchResult = applyResultCompression(
+              searchResult,
+              toolName,
+              cfg,
+              metrics,
+              tokenCounter,
+              featureStates,
+              keyRegistry,
+              keyRegistryCounter
+            );
             metrics.searchCalls += 1;
             sendToClient({
               jsonrpc: msg.jsonrpc || '2.0',

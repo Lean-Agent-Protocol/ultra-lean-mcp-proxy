@@ -93,7 +93,7 @@ export function createDefaultProxyConfig() {
     deltaSnapshotInterval: 5,
 
     lazyLoadingEnabled: true,
-    lazyMode: 'catalog',
+    lazyMode: 'minimal',
     lazyTopK: 8,
     lazySemantic: false,
     lazyMinTools: 10,

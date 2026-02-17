@@ -320,22 +320,71 @@ def _apply_definition_compression(tools: list[dict[str, Any]]) -> list[dict[str,
     return out
 
 
+def _strip_schema_metadata(schema: Any, depth: int = 0) -> Any:
+    if not isinstance(schema, dict):
+        return schema
+    out: dict[str, Any] = {}
+    if "type" in schema:
+        out["type"] = schema["type"]
+    req = schema.get("required")
+    if isinstance(req, list) and req:
+        out["required"] = list(req)
+    if isinstance(schema.get("enum"), list):
+        out["enum"] = list(schema["enum"])
+    if isinstance(schema.get("format"), str):
+        out["format"] = schema["format"]
+    if isinstance(schema.get("pattern"), str):
+        out["pattern"] = schema["pattern"]
+    if "const" in schema:
+        out["const"] = schema["const"]
+    if isinstance(schema.get("$ref"), str):
+        out["$ref"] = schema["$ref"]
+    if isinstance(schema.get("minimum"), (int, float)):
+        out["minimum"] = schema["minimum"]
+    if isinstance(schema.get("maximum"), (int, float)):
+        out["maximum"] = schema["maximum"]
+    if isinstance(schema.get("minLength"), (int, float)):
+        out["minLength"] = schema["minLength"]
+    if isinstance(schema.get("maxLength"), (int, float)):
+        out["maxLength"] = schema["maxLength"]
+    if isinstance(schema.get("minItems"), (int, float)):
+        out["minItems"] = schema["minItems"]
+    if isinstance(schema.get("maxItems"), (int, float)):
+        out["maxItems"] = schema["maxItems"]
+    if isinstance(schema.get("description"), str) and depth <= 1:
+        out["description"] = compress_description(schema["description"])
+    props = schema.get("properties")
+    if isinstance(props, dict):
+        out["properties"] = {
+            k: _strip_schema_metadata(v, depth + 1) for k, v in props.items()
+        }
+    items = schema.get("items")
+    if isinstance(items, list):
+        out["items"] = [_strip_schema_metadata(s, depth + 1) for s in items]
+    elif isinstance(items, dict):
+        out["items"] = _strip_schema_metadata(items, depth + 1)
+    for key in ("anyOf", "oneOf", "allOf"):
+        variants = schema.get(key)
+        if isinstance(variants, list):
+            out[key] = [_strip_schema_metadata(s, depth + 1) for s in variants]
+    not_schema = schema.get("not")
+    if isinstance(not_schema, dict):
+        out["not"] = _strip_schema_metadata(not_schema, depth + 1)
+    return out
+
+
 def _minimal_tool(tool: dict[str, Any]) -> dict[str, Any]:
     name = tool.get("name", "")
     description = tool.get("description", "")
-    schema = tool.get("inputSchema") or tool.get("input_schema") or {}
-    properties = schema.get("properties", {}) if isinstance(schema, dict) else {}
-    compact_props = {}
-    if isinstance(properties, dict):
-        for key, value in properties.items():
-            ptype = "string"
-            if isinstance(value, dict) and isinstance(value.get("type"), str):
-                ptype = value["type"]
-            compact_props[str(key)] = {"type": ptype}
+    schema = tool.get("inputSchema")
+    if schema is None:
+        schema = tool.get("input_schema")
+    if schema is None:
+        schema = {}
     return {
         "name": name,
-        "description": description,
-        "inputSchema": {"type": "object", "properties": compact_props},
+        "description": compress_description(description) or description,
+        "inputSchema": _strip_schema_metadata(schema, 0),
     }
 
 
@@ -593,7 +642,6 @@ def _apply_result_compression(
                     outcome = "hurt"
             _record_feature_outcome(feature_states, feature_key, outcome=outcome, config=config)
             if outcome == "success":
-                out["structuredContent"] = env
                 return out
             return result
 
@@ -857,6 +905,16 @@ async def run_proxy(command: list[str], config: Optional[ProxyConfig] = None, st
                             # Meta-tool for lazy discovery is handled fully in proxy.
                             if cfg.lazy_loading_enabled and tool_name == SEARCH_TOOL_NAME:
                                 search_result = _build_search_result(state, cfg, arguments)
+                                search_result = _apply_result_compression(
+                                    result=search_result,
+                                    tool_name=tool_name,
+                                    config=cfg,
+                                    metrics=metrics,
+                                    token_counter=token_counter,
+                                    feature_states=feature_states,
+                                    key_registry=key_registry,
+                                    key_registry_counter=key_registry_counter,
+                                )
                                 metrics.search_calls += 1
                                 await send_to_client(
                                     {"jsonrpc": msg.get("jsonrpc", "2.0"), "id": req_id, "result": search_result}
