@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "clients": [
+    {
+      "name": "claude-desktop",
+      "paths": {
+        "win32": "%APPDATA%/Claude/claude_desktop_config.json",
+        "darwin": "~/Library/Application Support/Claude/claude_desktop_config.json",
+        "linux": "~/.config/claude/claude_desktop_config.json"
+      },
+      "key": "mcpServers"
+    },
+    {
+      "name": "claude-code",
+      "paths": {
+        "win32": "~/.claude/settings.json",
+        "darwin": "~/.claude/settings.json",
+        "linux": "~/.claude/settings.json"
+      },
+      "key": "mcpServers"
+    },
+    {
+      "name": "claude-code-local",
+      "paths": {
+        "win32": "~/.claude/settings.local.json",
+        "darwin": "~/.claude/settings.local.json",
+        "linux": "~/.claude/settings.local.json"
+      },
+      "key": "mcpServers"
+    },
+    {
+      "name": "claude-code-user",
+      "paths": {
+        "win32": "~/.claude.json",
+        "darwin": "~/.claude.json",
+        "linux": "~/.claude.json"
+      },
+      "key": "mcpServers"
+    },
+    {
+      "name": "cursor",
+      "paths": {
+        "win32": "%USERPROFILE%/.cursor/mcp.json",
+        "darwin": "~/.cursor/mcp.json",
+        "linux": "~/.cursor/mcp.json"
+      },
+      "key": "mcpServers"
+    },
+    {
+      "name": "windsurf",
+      "paths": {
+        "win32": "%USERPROFILE%/.codeium/windsurf/mcp_config.json",
+        "darwin": "~/.codeium/windsurf/mcp_config.json",
+        "linux": "~/.codeium/windsurf/mcp_config.json"
+      },
+      "key": "mcpServers"
+    }
+  ]
+}

@@ -68,7 +68,7 @@ class ProxyConfig:
     definition_compression_enabled: bool = True
     definition_mode: str = "balanced"
 
-    result_compression_enabled: bool = False
+    result_compression_enabled: bool = True
     result_compression_mode: str = "balanced"
     result_min_payload_bytes: int = 512
     result_strip_nulls: bool = False
@@ -80,27 +80,27 @@ class ProxyConfig:
     result_key_bootstrap_interval: int = 8
     result_minify_redundant_text: bool = True
 
-    delta_responses_enabled: bool = False
+    delta_responses_enabled: bool = True
     delta_min_savings_ratio: float = 0.15
     delta_max_patch_bytes: int = 65536
     delta_max_patch_ratio: float = 0.8
     delta_snapshot_interval: int = 5
 
-    lazy_loading_enabled: bool = False
-    lazy_mode: str = "off"
+    lazy_loading_enabled: bool = True
+    lazy_mode: str = "catalog"
     lazy_top_k: int = 8
     lazy_semantic: bool = False
-    lazy_min_tools: int = 30
-    lazy_min_tokens: int = 8000
+    lazy_min_tools: int = 10
+    lazy_min_tokens: int = 2500
     lazy_min_confidence_score: float = 2.0
     lazy_fallback_full_on_low_confidence: bool = True
 
-    tools_hash_sync_enabled: bool = False
+    tools_hash_sync_enabled: bool = True
     tools_hash_sync_algorithm: str = "sha256"
     tools_hash_sync_refresh_interval: int = 50
     tools_hash_sync_include_server_fingerprint: bool = True
 
-    caching_enabled: bool = False
+    caching_enabled: bool = True
     cache_ttl_seconds: int = 300
     cache_max_entries: int = 5000
     cache_errors: bool = False
@@ -474,7 +474,7 @@ def load_proxy_config(
     cfg = _apply_env(cfg, env_map)
     cfg = _apply_cli_overrides(cfg, cli)
 
-    if cfg.lazy_mode not in {"off", "minimal", "search_only"}:
+    if cfg.lazy_mode not in {"off", "minimal", "catalog", "search_only"}:
         raise ValueError(f"Invalid lazy mode: {cfg.lazy_mode}")
     if cfg.result_compression_mode not in {"off", "balanced", "aggressive"}:
         raise ValueError(f"Invalid result compression mode: {cfg.result_compression_mode}")

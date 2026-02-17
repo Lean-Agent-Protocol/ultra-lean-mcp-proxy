@@ -1,0 +1,16 @@
+{
+  "tools": [
+    {
+      "name": "list_items",
+      "description": "List items",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  ]
+}

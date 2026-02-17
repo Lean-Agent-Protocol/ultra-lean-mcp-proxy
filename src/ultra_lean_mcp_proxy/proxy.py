@@ -275,10 +275,21 @@ def _build_profile_fingerprint(config: ProxyConfig, upstream_command: list[str])
     return stable_hash(payload)
 
 
-def _build_search_tool_definition() -> dict[str, Any]:
+def _build_search_tool_definition(tool_names: list[str] | None = None) -> dict[str, Any]:
+    base_desc = "Search available tools and return full schemas on demand."
+    if tool_names:
+        name_list = "\n".join(tool_names)
+        description = (
+            base_desc
+            + ' Use "select:<tool_name>" for direct selection, or keywords to search.\n\n'
+            "Available tools (must be loaded via this tool before use):\n"
+            + name_list
+        )
+    else:
+        description = base_desc
     return {
         "name": SEARCH_TOOL_NAME,
-        "description": "Search available tools and optionally return full schemas.",
+        "description": description,
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -366,9 +377,19 @@ def _handle_tools_list_result(
     if lazy_allowed:
         if config.lazy_mode == "search_only":
             visible_tools = []
+        elif config.lazy_mode == "catalog":
+            visible_tools = [
+                {"name": t.get("name", ""), "inputSchema": {"type": "object"}}
+                for t in processed_tools
+            ]
         elif config.lazy_mode == "minimal":
             visible_tools = [_minimal_tool(t) for t in processed_tools]
-        visible_tools.append(_build_search_tool_definition())
+        tool_names = (
+            [t.get("name", "") for t in processed_tools]
+            if config.lazy_mode == "catalog"
+            else None
+        )
+        visible_tools.append(_build_search_tool_definition(tool_names))
 
     out = clone_json(result)
     out["tools"] = visible_tools

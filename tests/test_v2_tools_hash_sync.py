@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from ultra_lean_mcp_proxy.config import ProxyConfig
 from ultra_lean_mcp_proxy.proxy import ProxyMetrics, _client_supports_tools_hash_sync, _handle_tools_list_result
 from ultra_lean_mcp_proxy.result_compression import TokenCounter
@@ -69,6 +72,14 @@ def test_tools_hash_canonicalization_stable_for_key_order():
     tools_b = [{"inputSchema": {"properties": {"a": {"type": "string"}}, "type": "object"}, "name": "x"}]
     assert canonical_tools_json(tools_a) == canonical_tools_json(tools_b)
     assert compute_tools_hash(tools_a) == compute_tools_hash(tools_b)
+
+
+def test_tools_hash_fixture_contract_matches_expected_wire_format():
+    fixture_path = Path(__file__).parent / "fixtures" / "v2_tools_list_sample.json"
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    wire = compute_tools_hash(payload["tools"])
+    assert wire.startswith("sha256:")
+    assert len(wire) == len("sha256:") + 64
 
 
 def test_tools_hash_server_fingerprint_binding_changes_hash():

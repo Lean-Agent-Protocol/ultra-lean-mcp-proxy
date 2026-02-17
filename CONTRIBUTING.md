@@ -28,6 +28,29 @@ This installs:
 - Development dependencies (pytest, tiktoken)
 - MCP proxy dependencies
 
+### npm Package Development
+
+The npm package lives in the `npm/` directory and has zero dependencies.
+
+```bash
+# Syntax check all files
+node --check npm/bin/cli.mjs
+node --check npm/src/compress.mjs
+node --check npm/src/installer.mjs
+node --check npm/src/proxy.mjs
+node --check npm/src/watcher.mjs
+
+# Run Node tests
+node --test "npm/test/*.test.mjs"
+
+# Test the CLI
+node npm/bin/cli.mjs status
+node npm/bin/cli.mjs install --dry-run
+
+# Test the proxy
+node npm/bin/cli.mjs proxy -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
 ### Project Structure
 
 ```
@@ -35,19 +58,30 @@ ultra-lean-mcp-proxy/
 ├── src/
 │   └── ultra_lean_mcp_proxy/
 │       ├── __init__.py
-│       ├── cli.py                # CLI entry point
-│       ├── proxy.py              # Main proxy runtime
+│       ├── cli.py                # CLI entry point (install/uninstall/status/proxy/watch)
+│       ├── installer.py          # Config discovery, wrap/unwrap, backup
+│       ├── watcher.py            # File watch + auto-wrap
+│       ├── proxy.py              # Main proxy runtime (full features)
 │       ├── config.py             # Configuration management
-│       ├── compression.py        # Compression engine
 │       ├── delta.py              # Delta response engine
-│       └── cache.py              # Caching layer
+│       ├── result_compression.py # Result compression
+│       ├── state.py              # Proxy state management
+│       └── tools_hash_sync.py    # Tools hash sync
+├── npm/
+│   ├── package.json
+│   ├── bin/
+│   │   └── cli.mjs              # Node.js CLI entry point
+│   └── src/
+│       ├── installer.mjs        # Config discovery + wrap/unwrap
+│       ├── proxy.mjs            # Basic stdio proxy (definition compression)
+│       ├── compress.mjs         # Description/schema compression
+│       └── watcher.mjs          # File watch + auto-wrap
+├── registry/
+│   └── clients.json             # Remote client registry
 ├── tests/
-│   ├── test_proxy.py
-│   ├── test_compression.py
-│   └── test_delta.py
+│   ├── test_installer.py
+│   └── ...
 ├── benchmarks/
-│   ├── benchmark_live_servers.py
-│   └── results_v2_live_servers.md
 ├── README.md
 ├── pyproject.toml
 └── LICENSE

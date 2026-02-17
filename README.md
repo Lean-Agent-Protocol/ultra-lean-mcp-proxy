@@ -7,10 +7,66 @@
 # ultra-lean-mcp-proxy
 
 [![PyPI](https://img.shields.io/pypi/v/ultra-lean-mcp-proxy?color=blue)](https://pypi.org/project/ultra-lean-mcp-proxy/)
+[![npm](https://img.shields.io/npm/v/ultra-lean-mcp-proxy?color=red)](https://www.npmjs.com/package/ultra-lean-mcp-proxy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
 Transparent MCP stdio proxy that reduces token and byte overhead on `tools/list` and `tools/call` paths using LAP (Lean Agent Protocol) compression.
+
+## One-Line Install
+
+### Python (pip)
+```bash
+pip install ultra-lean-mcp-proxy
+ultra-lean-mcp-proxy install
+```
+
+### Node.js (npx - zero Python dependency)
+```bash
+npx ultra-lean-mcp-proxy install
+```
+
+Both commands auto-discover local MCP client configs (Claude Desktop, Cursor, Windsurf, Claude Code), wrap stdio and URL (`http`/`sse`) entries by default, and back up originals.
+
+To uninstall:
+```bash
+ultra-lean-mcp-proxy uninstall
+```
+
+To check current status:
+```bash
+ultra-lean-mcp-proxy status
+```
+
+## Add Servers That Get Wrapped
+
+`ultra-lean-mcp-proxy install` wraps local stdio servers (`command` + `args`) and local URL-based transports (`http` / `sse`) by default.
+Use `--no-wrap-url` if you only want stdio wrapping.
+
+For Claude Code, add servers in stdio form and use `--scope user` so they are written to `~/.claude.json` (auto-detected):
+
+```bash
+# Wrappable (stdio)
+claude mcp add --scope user filesystem -- npx -y @modelcontextprotocol/server-filesystem /tmp
+```
+
+```bash
+# Wrappable by default (wrapped via local bridge chain)
+claude mcp add --scope user --transport http linear https://mcp.linear.app/mcp
+```
+
+Then run:
+
+```bash
+ultra-lean-mcp-proxy status
+ultra-lean-mcp-proxy install
+```
+
+> **Note**: `claude mcp add --scope project ...` writes to `.mcp.json` in the current project. This file is not globally auto-discovered by `install` yet.
+
+> **Note**: URL wrapping applies to local config files (for example `~/.claude.json`, `~/.cursor/mcp.json`).  
+> For cloud-managed Claude connectors, use npm CLI `wrap-cloud` to mirror and wrap them locally:
+> `npx ultra-lean-mcp-proxy wrap-cloud`
 
 ## Features
 
@@ -24,6 +80,9 @@ Transparent MCP stdio proxy that reduces token and byte overhead on `tools/list`
 - **Result Compression**: Compress tool call results using LAP format
 
 ## Performance Benchmarks
+
+Benchmark figures below are for the Python runtime with the full v2 optimization pipeline enabled.
+The npm package in Phase C1 currently provides definition compression only.
 
 Real-world benchmark across 5 production MCP servers (147 measured turns):
 
@@ -109,13 +168,10 @@ Now when Claude uses the filesystem server, all communication is automatically o
 ### Command-Line Flags
 
 ```bash
-# Enable/disable optimization features
+# All optimization vectors are ON by default.
+# Use --disable-* flags to opt out.
 ultra-lean-mcp-proxy proxy \
-  --enable-result-compression \
-  --enable-delta-responses \
-  --enable-lazy-loading \
-  --enable-tools-hash-sync \
-  --enable-caching \
+  --disable-lazy-loading \
   -- <upstream-command>
 
 # Fine-tune optimization parameters
@@ -231,6 +287,58 @@ Compress tool call results:
 
 - **Balanced**: Compress descriptions, preserve structure
 - **Aggressive**: Maximum compression, lean LAP format
+
+## CLI Reference
+
+### Install / Uninstall
+```bash
+# Install: wrap all MCP servers with proxy
+ultra-lean-mcp-proxy install [--dry-run] [--client NAME] [--skip NAME] [--offline] [--no-wrap-url] [--no-cloud] [--suffix NAME] [-v]
+# `--skip` matches MCP server names inside config files
+
+# Uninstall: restore original configs
+ultra-lean-mcp-proxy uninstall [--dry-run] [--client NAME] [--runtime pip|npm] [--all] [-v]
+
+# Check status
+ultra-lean-mcp-proxy status
+
+# Mirror cloud-scoped Claude URL connectors into local wrapped entries (npm CLI)
+npx ultra-lean-mcp-proxy wrap-cloud [--dry-run] [--runtime npm|pip] [--suffix -ulmp] [-v]
+```
+
+### Watch Mode (Auto-Update)
+```bash
+# Watch config files, auto-wrap new servers
+ultra-lean-mcp-proxy watch
+
+# Watch but keep URL/SSE/HTTP entries unwrapped
+ultra-lean-mcp-proxy watch --no-wrap-url
+
+# Run as background daemon
+ultra-lean-mcp-proxy watch --daemon
+
+# Stop daemon
+ultra-lean-mcp-proxy watch --stop
+
+# Set cloud connector discovery interval (default: 60s)
+ultra-lean-mcp-proxy watch --cloud-interval 30
+
+# Customize suffix for cloud-mirrored entries
+ultra-lean-mcp-proxy watch --suffix -proxy
+```
+
+Watch mode auto-discovers cloud-scoped Claude MCP connectors when the `claude` CLI is available on PATH, polling every `--cloud-interval` seconds.
+
+### Proxy (Direct Usage)
+```bash
+ultra-lean-mcp-proxy proxy [--enable-<feature>|--disable-<feature>] [--cache-ttl SEC] [--lazy-mode MODE] -- <upstream-command> [args...]
+```
+
+For troubleshooting, you can enable per-server RPC tracing:
+
+```bash
+ultra-lean-mcp-proxy proxy --trace-rpc -- <upstream-command>
+```
 
 ## Architecture
 

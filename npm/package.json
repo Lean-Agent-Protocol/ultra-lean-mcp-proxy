@@ -1,0 +1,23 @@
+{
+  "name": "ultra-lean-mcp-proxy",
+  "version": "0.3.0",
+  "description": "Ultra Lean MCP Proxy - lightweight optimization proxy for MCP (Node.js)",
+  "type": "module",
+  "bin": {
+    "ultra-lean-mcp-proxy": "./bin/cli.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lean-agent-protocol/ultra-lean-mcp-proxy.git"
+  },
+  "keywords": ["mcp", "proxy", "optimization", "compression"]
+}
