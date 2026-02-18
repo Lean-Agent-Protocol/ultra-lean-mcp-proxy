@@ -46,6 +46,7 @@ def main():
     _add_bool_toggle(p_proxy, "lazy-loading", "lazy loading")
     _add_bool_toggle(p_proxy, "tools-hash-sync", "tools hash sync")
     _add_bool_toggle(p_proxy, "caching", "caching")
+    _add_bool_toggle(p_proxy, "definition-compression", "definition compression")
 
     p_proxy.add_argument("--cache-ttl", type=int, help="Default cache TTL in seconds")
     p_proxy.add_argument("--delta-min-savings", type=float, help="Minimum savings ratio for delta emission")
@@ -67,6 +68,7 @@ def main():
         lazy_loading=None,
         tools_hash_sync=None,
         caching=None,
+        definition_compression=None,
     )
 
     p_proxy.add_argument("upstream", nargs=argparse.REMAINDER, help="Upstream MCP server command (after --)")

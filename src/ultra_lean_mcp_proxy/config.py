@@ -435,6 +435,7 @@ def _apply_cli_overrides(cfg: ProxyConfig, cli: Mapping[str, Any]) -> ProxyConfi
     _set_bool("lazy_loading", "lazy_loading_enabled")
     _set_bool("tools_hash_sync", "tools_hash_sync_enabled")
     _set_bool("caching", "caching_enabled")
+    _set_bool("definition_compression", "definition_compression_enabled")
 
     if cli.get("session_id"):
         cfg.session_id = str(cli["session_id"])
