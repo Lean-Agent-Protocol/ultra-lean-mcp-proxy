@@ -609,6 +609,9 @@ function applyDeltaResponse(result, historyKey, toolName, state, cfg, metrics, d
 
   const fullTokens = tokenCounter.count(result);
 
+  // Skip delta for small results where overhead can never save tokens.
+  if (fullTokens < cfg.deltaMinResultTokens) return result;
+
   if (JSON.stringify(previous) === JSON.stringify(result)) {
     const delta = {
       encoding: 'lapc-delta-v1',
@@ -616,14 +619,13 @@ function applyDeltaResponse(result, historyKey, toolName, state, cfg, metrics, d
       currentHash: stableHash(result),
     };
     const payload = { delta };
-    if (tokenCounter.count(payload) >= fullTokens) return result;
+    // Build the full envelope and check its token cost (not just the payload).
+    const envelope = { structuredContent: payload };
+    if (tokenCounter.count(envelope) >= fullTokens) return result;
     deltaCounters[historyKey] = (deltaCounters[historyKey] || 0) + 1;
     metrics.deltaResponses += 1;
-    metrics.deltaSavedBytes += Math.max(0, jsonSize(result) - jsonSize(payload));
-    return {
-      structuredContent: payload,
-      content: [{ type: 'text', text: JSON.stringify(payload) }],
-    };
+    metrics.deltaSavedBytes += Math.max(0, jsonSize(result) - jsonSize(envelope));
+    return envelope;
   }
 
   try {
@@ -634,14 +636,13 @@ function applyDeltaResponse(result, historyKey, toolName, state, cfg, metrics, d
       : 0;
     if (patchRatio > cfg.deltaMaxPatchRatio) return result;
     const payload = { delta };
-    if (tokenCounter.count(payload) >= fullTokens) return result;
+    // Build the full envelope and check its token cost (not just the payload).
+    const envelope = { structuredContent: payload };
+    if (tokenCounter.count(envelope) >= fullTokens) return result;
     deltaCounters[historyKey] = (deltaCounters[historyKey] || 0) + 1;
     metrics.deltaResponses += 1;
     metrics.deltaSavedBytes += Number(delta.savedBytes || 0);
-    return {
-      structuredContent: payload,
-      content: [{ type: 'text', text: JSON.stringify(payload) }],
-    };
+    return envelope;
   } catch {
     return result;
   }

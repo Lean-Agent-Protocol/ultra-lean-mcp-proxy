@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ultra-lean-mcp-proxy"
-version = "0.3.0"
+version = "0.3.1"
 description = "Ultra Lean MCP Proxy - lightweight optimization proxy for MCP"
 readme = "README.md"
 license = "MIT"

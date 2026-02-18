@@ -735,6 +735,10 @@ def _apply_delta_response(
 
     full_tokens = token_counter.count(result)
 
+    # Skip delta for small results where overhead can never save tokens.
+    if full_tokens < config.delta_min_result_tokens:
+        return result
+
     if previous == result:
         delta = {
             "encoding": "lapc-delta-v1",
@@ -742,15 +746,14 @@ def _apply_delta_response(
             "currentHash": stable_hash(result),
         }
         payload = {"delta": delta}
-        if token_counter.count(payload) >= full_tokens:
+        # Build the full envelope and check its token cost (not just the payload).
+        envelope = {"structuredContent": payload}
+        if token_counter.count(envelope) >= full_tokens:
             return result
         delta_counters[history_key] = delta_counters.get(history_key, 0) + 1
         metrics.delta_responses += 1
-        metrics.delta_saved_bytes += max(0, _json_size(result) - _json_size(payload))
-        return {
-            "structuredContent": payload,
-            "content": [{"type": "text", "text": json.dumps(payload, separators=(",", ":"), ensure_ascii=False)}],
-        }
+        metrics.delta_saved_bytes += max(0, _json_size(result) - _json_size(envelope))
+        return envelope
 
     try:
         delta = create_delta(
@@ -769,15 +772,14 @@ def _apply_delta_response(
         if patch_ratio > config.delta_max_patch_ratio:
             return result
         payload = {"delta": delta}
-        if token_counter.count(payload) >= full_tokens:
+        # Build the full envelope and check its token cost (not just the payload).
+        envelope = {"structuredContent": payload}
+        if token_counter.count(envelope) >= full_tokens:
             return result
         delta_counters[history_key] = delta_counters.get(history_key, 0) + 1
         metrics.delta_responses += 1
         metrics.delta_saved_bytes += int(delta.get("savedBytes", 0))
-        return {
-            "structuredContent": payload,
-            "content": [{"type": "text", "text": json.dumps(payload, separators=(",", ":"), ensure_ascii=False)}],
-        }
+        return envelope
     except Exception as exc:
         logger.debug("delta response skipped due to error: %s", exc)
         return result

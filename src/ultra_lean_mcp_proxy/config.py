@@ -86,6 +86,7 @@ class ProxyConfig:
     delta_max_patch_bytes: int = 65536
     delta_max_patch_ratio: float = 0.8
     delta_snapshot_interval: int = 5
+    delta_min_result_tokens: int = 100
 
     lazy_loading_enabled: bool = True
     lazy_mode: str = "minimal"
@@ -243,6 +244,8 @@ def _apply_global_config(
                 cfg.delta_max_patch_ratio = min(max(ratio, 0.0), 1.0)
             if isinstance(dcfg.get("snapshot_interval"), int):
                 cfg.delta_snapshot_interval = max(1, dcfg["snapshot_interval"])
+            if isinstance(dcfg.get("min_result_tokens"), int):
+                cfg.delta_min_result_tokens = max(0, dcfg["min_result_tokens"])
 
         lcfg = optimizations.get("lazy_loading", {})
         if isinstance(lcfg, dict):
@@ -375,6 +378,11 @@ def _apply_env(cfg: ProxyConfig, env: Mapping[str, str]) -> ProxyConfig:
             cfg.delta_max_patch_ratio = min(max(ratio, 0.0), 1.0)
         except ValueError:
             pass
+    if env.get("ULTRA_LEAN_MCP_PROXY_DELTA_MIN_RESULT_TOKENS"):
+        try:
+            cfg.delta_min_result_tokens = max(0, int(env["ULTRA_LEAN_MCP_PROXY_DELTA_MIN_RESULT_TOKENS"]))
+        except ValueError:
+            pass
 
     if _parse_bool(env.get("ULTRA_LEAN_MCP_PROXY_LAZY_LOADING")) is not None:
         cfg.lazy_loading_enabled = bool(_parse_bool(env.get("ULTRA_LEAN_MCP_PROXY_LAZY_LOADING")))
@@ -446,6 +454,8 @@ def _apply_cli_overrides(cfg: ProxyConfig, cli: Mapping[str, Any]) -> ProxyConfi
         cfg.cache_ttl_seconds = max(0, int(cli["cache_ttl"]))
     if cli.get("delta_min_savings") is not None:
         cfg.delta_min_savings_ratio = min(max(float(cli["delta_min_savings"]), 0.0), 1.0)
+    if cli.get("delta_min_result_tokens") is not None:
+        cfg.delta_min_result_tokens = max(0, int(cli["delta_min_result_tokens"]))
     if cli.get("lazy_mode"):
         cfg.lazy_mode = str(cli["lazy_mode"])
     if cli.get("search_top_k") is not None:

@@ -91,6 +91,7 @@ export function createDefaultProxyConfig() {
     deltaMaxPatchBytes: 65536,
     deltaMaxPatchRatio: 0.8,
     deltaSnapshotInterval: 5,
+    deltaMinResultTokens: 100,
 
     lazyLoadingEnabled: true,
     lazyMode: 'minimal',
@@ -219,6 +220,9 @@ function applyGlobalConfig(cfg, configData, upstreamCommand, { applyServerProfil
       if (Number.isInteger(dcfg.snapshot_interval)) {
         out.deltaSnapshotInterval = Math.max(1, dcfg.snapshot_interval);
       }
+      if (Number.isInteger(dcfg.min_result_tokens)) {
+        out.deltaMinResultTokens = Math.max(0, dcfg.min_result_tokens);
+      }
     }
 
     const lcfg = optimizations.lazy_loading;
@@ -336,6 +340,10 @@ function applyEnv(cfg, env) {
     const ratio = Number.parseFloat(env.ULTRA_LEAN_MCP_PROXY_DELTA_MAX_PATCH_RATIO);
     if (Number.isFinite(ratio)) out.deltaMaxPatchRatio = Math.min(Math.max(ratio, 0), 1);
   }
+  if (env.ULTRA_LEAN_MCP_PROXY_DELTA_MIN_RESULT_TOKENS) {
+    const n = Number.parseInt(env.ULTRA_LEAN_MCP_PROXY_DELTA_MIN_RESULT_TOKENS, 10);
+    if (Number.isFinite(n)) out.deltaMinResultTokens = Math.max(0, n);
+  }
 
   const lazyLoading = parseBool(env.ULTRA_LEAN_MCP_PROXY_LAZY_LOADING, null);
   if (lazyLoading !== null) out.lazyLoadingEnabled = lazyLoading;
@@ -408,6 +416,10 @@ function applyCliOverrides(cfg, cli) {
   if (deltaMinSavings !== undefined && deltaMinSavings !== null) {
     const ratio = Number.parseFloat(deltaMinSavings);
     if (Number.isFinite(ratio)) out.deltaMinSavingsRatio = Math.min(Math.max(ratio, 0), 1);
+  }
+  const deltaMinResultTokens = getCliValue(cli, 'deltaMinResultTokens', 'delta_min_result_tokens');
+  if (deltaMinResultTokens !== undefined && deltaMinResultTokens !== null) {
+    out.deltaMinResultTokens = Math.max(0, Number.parseInt(deltaMinResultTokens, 10) || 0);
   }
   const lazyMode = getCliValue(cli, 'lazyMode', 'lazy_mode');
   if (lazyMode) out.lazyMode = String(lazyMode);

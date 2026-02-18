@@ -1,6 +1,6 @@
 """Ultra Lean MCP Proxy package."""
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 from .config import ProxyConfig, load_proxy_config
 from .delta import apply_delta, canonicalize, create_delta, stable_hash

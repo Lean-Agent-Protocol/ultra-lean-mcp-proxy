@@ -50,6 +50,7 @@ def main():
 
     p_proxy.add_argument("--cache-ttl", type=int, help="Default cache TTL in seconds")
     p_proxy.add_argument("--delta-min-savings", type=float, help="Minimum savings ratio for delta emission")
+    p_proxy.add_argument("--delta-min-result-tokens", type=int, help="Skip delta for results below this token count")
     p_proxy.add_argument("--lazy-mode", choices=["off", "minimal", "search_only"], help="Lazy loading mode")
     p_proxy.add_argument("--tools-hash-refresh-interval", type=int, help="Force full snapshot every N conditional hits")
     p_proxy.add_argument("--search-top-k", type=int, help="Default top-k for search tool")
@@ -171,6 +172,7 @@ def main():
             "trace_rpc": args.trace_rpc,
             "session_id": args.session_id,
             "strict_config": args.strict_config,
+            "definition_compression": args.definition_compression,
             "result_compression": args.result_compression,
             "delta_responses": args.delta_responses,
             "lazy_loading": args.lazy_loading,
@@ -178,6 +180,7 @@ def main():
             "caching": args.caching,
             "cache_ttl": args.cache_ttl,
             "delta_min_savings": args.delta_min_savings,
+            "delta_min_result_tokens": args.delta_min_result_tokens,
             "lazy_mode": args.lazy_mode,
             "tools_hash_refresh_interval": args.tools_hash_refresh_interval,
             "search_top_k": args.search_top_k,
@@ -219,6 +222,7 @@ def main():
                         "delta_responses_enabled": config.delta_responses_enabled,
                         "delta_max_patch_ratio": config.delta_max_patch_ratio,
                         "delta_snapshot_interval": config.delta_snapshot_interval,
+                        "delta_min_result_tokens": config.delta_min_result_tokens,
                         "lazy_loading_enabled": config.lazy_loading_enabled,
                         "lazy_mode": config.lazy_mode,
                         "lazy_min_tools": config.lazy_min_tools,
