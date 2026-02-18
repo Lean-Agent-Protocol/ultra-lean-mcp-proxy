@@ -58,6 +58,7 @@ def main():
         help="Result compression mode",
     )
     p_proxy.add_argument("--dump-effective-config", action="store_true", help="Print resolved config to stderr")
+    p_proxy.add_argument("--trace-rpc", action="store_true", help="Trace JSON-RPC messages to stderr")
     p_proxy.add_argument("--runtime", help=argparse.SUPPRESS)
 
     p_proxy.set_defaults(
@@ -165,6 +166,7 @@ def main():
         cli_overrides = {
             "stats": args.stats,
             "verbose": args.verbose,
+            "trace_rpc": args.trace_rpc,
             "session_id": args.session_id,
             "strict_config": args.strict_config,
             "result_compression": args.result_compression,
@@ -200,6 +202,7 @@ def main():
                     {
                         "stats": config.stats,
                         "verbose": config.verbose,
+                        "trace_rpc": config.trace_rpc,
                         "session_id": config.session_id,
                         "server_name": config.server_name,
                         "definition_compression_enabled": config.definition_compression_enabled,

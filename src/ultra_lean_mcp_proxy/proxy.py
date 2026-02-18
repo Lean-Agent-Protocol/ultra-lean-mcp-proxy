@@ -11,7 +11,7 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from ultra_lean_mcp_core.compress import compress_description, compress_schema
+from .compress import compress_description, compress_schema
 from .config import ProxyConfig
 from .delta import create_delta, stable_hash
 from .result_compression import (
@@ -783,6 +783,37 @@ def _apply_delta_response(
         return result
 
 
+def _trace_inbound(trace_rpc: bool, msg: dict) -> None:
+    """Log inbound client JSON-RPC messages to stderr."""
+    if not trace_rpc:
+        return
+    method = msg.get("method")
+    if method:
+        id_part = f" id={msg['id']}" if msg.get("id") is not None else ""
+        kind = "request" if msg.get("id") is not None else "notification"
+        sys.stderr.write(f"[ultra-lean-mcp-proxy] rpc-> {kind} {method}{id_part}\n")
+        sys.stderr.flush()
+
+
+def _trace_upstream(trace_rpc: bool, msg: dict, pending: dict) -> None:
+    """Log upstream JSON-RPC messages to stderr."""
+    if not trace_rpc:
+        return
+    method = msg.get("method")
+    if method:
+        id_part = f" id={msg['id']}" if msg.get("id") is not None else ""
+        kind = "request" if msg.get("id") is not None else "notification"
+        sys.stderr.write(f"[ultra-lean-mcp-proxy] rpc<- upstream {kind} {method}{id_part}\n")
+        sys.stderr.flush()
+    elif msg.get("id") is not None:
+        req_id = msg["id"]
+        req = pending.get(req_id)
+        origin = req.method if req else "?"
+        status = "result" if "result" in msg else "error" if "error" in msg else "?"
+        sys.stderr.write(f"[ultra-lean-mcp-proxy] rpc<- upstream response id={req_id} for={origin} status={status}\n")
+        sys.stderr.flush()
+
+
 async def run_proxy(command: list[str], config: Optional[ProxyConfig] = None, stats: bool = False):
     """Run Ultra Lean MCP Proxy with optional v2 optimizations."""
     cfg = config or ProxyConfig()
@@ -805,6 +836,8 @@ async def run_proxy(command: list[str], config: Optional[ProxyConfig] = None, st
     upstream_stdin = proc.stdin
     upstream_stdout = proc.stdout
 
+    trace_rpc = cfg.trace_rpc
+
     state = ProxyState(max_cache_entries=cfg.cache_max_entries)
     metrics = ProxyMetrics()
     token_counter = TokenCounter()
@@ -815,6 +848,10 @@ async def run_proxy(command: list[str], config: Optional[ProxyConfig] = None, st
     pending: dict[Any, PendingRequest] = {}
     tools_hash_sync_negotiated = False
     client_write_lock = asyncio.Lock()
+
+    if trace_rpc:
+        sys.stderr.write("[ultra-lean-mcp-proxy] trace-rpc enabled\n")
+        sys.stderr.flush()
 
     async def send_to_client(msg: dict):
         if cfg.stats and isinstance(msg, dict):
@@ -846,6 +883,8 @@ async def run_proxy(command: list[str], config: Optional[ProxyConfig] = None, st
                                 proc.kill()
                                 await proc.wait()
                     return
+
+                _trace_inbound(trace_rpc, msg)
 
                 # Intercept JSON-RPC requests with id.
                 method = msg.get("method")
@@ -972,6 +1011,8 @@ async def run_proxy(command: list[str], config: Optional[ProxyConfig] = None, st
                 metrics.upstream_responses += 1
                 metrics.upstream_response_bytes += _json_bytes(msg)
                 metrics.upstream_response_tokens += token_counter.count(msg)
+
+                _trace_upstream(trace_rpc, msg, pending)
 
                 req_id = msg.get("id")
                 if req_id is not None and "result" in msg:

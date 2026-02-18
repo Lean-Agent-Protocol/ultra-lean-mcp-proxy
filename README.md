@@ -397,19 +397,6 @@ Output to stderr:
 - **[ultra-lean-mcp-core](https://github.com/lean-agent-protocol/ultra-lean-mcp-core)** - Zero-dependency core library for LAP compilation/decompilation
 - **[ultra-lean-mcp](https://github.com/lean-agent-protocol/ultra-lean-mcp)** - MCP server + CLI for LAP workflows
 
-## Benchmarks
-
-See `benchmarks/` directory for:
-- `results_v2_live_servers.md` - Real server benchmark results
-- `results_v2_real_world.md` - Production workload analysis
-- `ACCURACY_RESULTS.md` - Roundtrip validation results
-
-Run benchmarks:
-```bash
-cd benchmarks
-python benchmark_live_servers.py
-```
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.

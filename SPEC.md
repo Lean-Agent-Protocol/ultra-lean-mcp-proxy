@@ -1,6 +1,6 @@
 ﻿# LAP Format Specification
 
-> Note: This spec is now maintained by ultra-lean-mcp-core and consumed by ultra-lean-mcp.
+> Note: LAP format specification for tool interface descriptions.
 
 **Version 0.1**
 
@@ -8,10 +8,10 @@ LAP is a compact, line-oriented format for describing tool interfaces. It is des
 
 ## Design Principles
 
-1. **One directive per line** ג€” easy to parse, easy to scan
-2. **Types are terse** ג€” `str` not `"type": "string"`
-3. **Required is default** ג€” optional params are explicitly marked
-4. **Descriptions inline** ג€” no nested structure needed
+1. **One directive per line** -- easy to parse, easy to scan
+2. **Types are terse** -- `str` not `"type": "string"`
+3. **Required is default** -- optional params are explicitly marked
+4. **Descriptions inline** -- no nested structure needed
 
 ## Grammar
 
@@ -192,7 +192,7 @@ A bundle starts with `#` header lines for the server, followed by tool blocks:
 - No escaping needed for typical tool descriptions
 - Newlines within descriptions are not supported (use single line)
 - If a description contains `@` at the start, it won't conflict (only `@directive` at line start is parsed)
-- Colons in descriptions are fine ג€” only `name:type` at the start of `@in`/`@opt` is parsed as a parameter
+- Colons in descriptions are fine -- only `name:type` at the start of `@in`/`@opt` is parsed as a parameter
 
 ## Lean Mode
 

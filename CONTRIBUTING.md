@@ -81,7 +81,6 @@ ultra-lean-mcp-proxy/
 ├── tests/
 │   ├── test_installer.py
 │   └── ...
-├── benchmarks/
 ├── README.md
 ├── pyproject.toml
 └── LICENSE
@@ -156,24 +155,6 @@ mcp-inspector ultra-lean-mcp-proxy proxy -- \
   npx -y @modelcontextprotocol/server-filesystem /tmp
 ```
 
-### Benchmark Testing
-
-Run live server benchmarks:
-
-```bash
-cd benchmarks
-python benchmark_live_servers.py
-
-# View results
-cat results_v2_live_servers.md
-```
-
-Benchmarks test:
-- Token savings across real MCP servers
-- Response time improvements
-- Cache hit ratios
-- Delta compression effectiveness
-
 ### Testing Configuration
 
 Test different config combinations:
@@ -201,8 +182,7 @@ ultra-lean-mcp-proxy proxy \
 1. **Design**: Document the optimization strategy
 2. **Implement**: Add feature with config toggle
 3. **Test**: Write unit and integration tests
-4. **Benchmark**: Measure token/time impact
-5. **Document**: Update README with feature description
+4. **Document**: Update README with feature description
 
 Example workflow:
 ```bash
@@ -212,17 +192,13 @@ git checkout -b feature/new-optimization
 # 2. Implement with tests
 # ... code changes ...
 
-# 3. Run benchmarks
-cd benchmarks
-python benchmark_live_servers.py
+# 3. Run tests
+python -m pytest tests/ -v
 
-# 4. Compare results
-diff results_v2_live_servers.md results_v2_live_servers.md.backup
-
-# 5. Update docs
+# 4. Update docs
 # ... README changes ...
 
-# 6. Commit and PR
+# 5. Commit and PR
 git commit -am "Add new optimization feature"
 ```
 
@@ -278,18 +254,10 @@ Output shows:
    PYTHONPATH=src python -m pytest -q
    ```
 
-2. **Run Benchmarks**: Verify performance impact
-   ```bash
-   cd benchmarks
-   python benchmark_live_servers.py
-   ```
-
-3. **Test Integration**: Test with real MCP servers
+2. **Test Integration**: Test with real MCP servers
    ```bash
    ultra-lean-mcp-proxy proxy -v -- npx -y @modelcontextprotocol/server-filesystem /tmp
    ```
-
-4. **Update Benchmarks**: Document performance changes in PR
 
 ### PR Guidelines
 
@@ -297,11 +265,10 @@ Output shows:
 2. **Create a branch**: `git checkout -b feature/my-feature`
 3. **Make changes** following guidelines
 4. **Write tests** for new functionality
-5. **Run benchmarks** to measure impact
-6. **Update documentation**
-7. **Commit** with clear messages
-8. **Push** to your fork
-9. **Open a PR** with benchmark results
+5. **Update documentation**
+6. **Commit** with clear messages
+7. **Push** to your fork
+8. **Open a PR**
 
 ### PR Description Template
 
@@ -325,7 +292,6 @@ Why this change is needed
 ## Testing
 - [ ] Unit tests pass
 - [ ] Integration tests pass
-- [ ] Benchmarks updated
 - [ ] Manual testing completed
 
 ## Breaking Changes
@@ -338,47 +304,20 @@ Reviewers will check:
 
 - Code quality and async patterns
 - Test coverage (unit + integration)
-- Performance impact (benchmarks)
+- Performance impact
 - Configuration handling
 - Error handling and graceful degradation
 - Documentation updates
 - Backward compatibility
 
-## Benchmark Guidelines
-
-### Writing Benchmarks
-
-Benchmarks should:
-- Test real-world scenarios
-- Use actual MCP servers when possible
-- Measure both tokens and time
-- Report statistical significance
-- Include warmup phase to prime caches
-
-### Benchmark Metrics
-
-Track:
-- **Token Savings**: `(original - compressed) / original * 100`
-- **Time Savings**: `(direct - proxy) / direct * 100`
-- **Cache Hit Ratio**: `hits / (hits + misses)`
-- **Delta Effectiveness**: Percentage of responses using deltas
-- **Overhead**: Proxy processing time
-
-### Updating Benchmarks
-
-When making changes:
-1. Run baseline: `python benchmark_live_servers.py > baseline.md`
-2. Make changes
-3. Run new benchmark: `python benchmark_live_servers.py > updated.md`
-4. Compare: `diff baseline.md updated.md`
-5. Document in PR
-
 ## Dependencies
 
-This package depends on:
-- **ultra-lean-mcp-core** (required) - Core LAP functionality
+This package has **zero runtime dependencies**. All compression logic is inlined.
+
+Optional/dev dependencies:
 - **mcp** (optional) - MCP SDK for proxy functionality
-- **tiktoken** (dev) - Token counting for benchmarks
+- **tiktoken** (dev) - Token counting
+- **pytest** (dev) - Testing
 
 When adding features:
 - Minimize new dependencies
@@ -388,7 +327,7 @@ When adding features:
 ## Performance Considerations
 
 When contributing:
-- **Measure First**: Always benchmark before optimizing
+- **Measure First**: Profile before optimizing
 - **Minimize Overhead**: Keep proxy processing time low
 - **Async All The Way**: Use async/await for I/O
 - **Graceful Degradation**: Fall back to pass-through on errors
@@ -398,7 +337,6 @@ When contributing:
 
 - **Issues**: Open an issue for bugs or feature requests
 - **Discussions**: Use GitHub Discussions for design questions
-- **Benchmarks**: Check `benchmarks/` for performance data
 - **Documentation**: See README and MCP protocol docs
 
 ## License

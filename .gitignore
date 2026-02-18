@@ -114,6 +114,9 @@ Thumbs.db
 .claude/
 CLAUDE.md
 
+# Node.js
+node_modules/
+
 # Proxy-specific
 logs/
 *.tmp.json

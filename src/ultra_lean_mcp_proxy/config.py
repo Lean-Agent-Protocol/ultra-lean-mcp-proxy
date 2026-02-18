@@ -62,6 +62,7 @@ class ProxyConfig:
 
     stats: bool = False
     verbose: bool = False
+    trace_rpc: bool = False
     session_id: str = "default"
     strict_config: bool = False
 
@@ -428,6 +429,7 @@ def _apply_cli_overrides(cfg: ProxyConfig, cli: Mapping[str, Any]) -> ProxyConfi
 
     _set_bool("stats", "stats")
     _set_bool("verbose", "verbose")
+    _set_bool("trace_rpc", "trace_rpc")
     _set_bool("result_compression", "result_compression_enabled")
     _set_bool("delta_responses", "delta_responses_enabled")
     _set_bool("lazy_loading", "lazy_loading_enabled")
