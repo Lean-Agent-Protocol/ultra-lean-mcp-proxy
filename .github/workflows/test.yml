@@ -41,4 +41,5 @@ jobs:
           node --check npm/src/proxy.mjs
           node --check npm/src/watcher.mjs
       - name: Run Node tests
-        run: node --test "npm/test/*.test.mjs"
+        shell: bash
+        run: node --test npm/test/*.test.mjs
