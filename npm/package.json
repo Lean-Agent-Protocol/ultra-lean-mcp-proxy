@@ -1,6 +1,6 @@
 {
   "name": "ultra-lean-mcp-proxy",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Ultra Lean MCP Proxy - lightweight optimization proxy for MCP (Node.js)",
   "type": "module",
   "bin": {
